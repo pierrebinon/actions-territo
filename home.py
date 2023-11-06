@@ -45,10 +45,11 @@ if files is not None and len(files) > 0:
     st.write("---")
     st.title("3. Afficher la carte de France")
     french_departments_geojson="https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson"
-    # plot all french departments polygons
     fig = px.choropleth_mapbox(geojson=french_departments_geojson)
     fig.update_geos(fitbounds="locations", visible=False)
-    # zoom on france
     fig.update_layout(mapbox_style="carto-positron", mapbox_zoom=3, mapbox_center = {"lat": 46.2276, "lon": 2.2137})
-    #fig.update_layout(mapbox_style="open-street-map")
     st.plotly_chart(fig, use_container_width=True)
+
+
+
+
