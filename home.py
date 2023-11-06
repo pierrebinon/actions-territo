@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import urllib.request
+import json
+import geopandas as gpd
 
 # paramètres
 sheet_name = 'Synthèse pour DREAL (en caché)'
@@ -32,7 +35,7 @@ if files is not None and len(files) > 0:
                 sheet['filename'] = f.name
                 # replace values by NaN
                 sheet = sheet.replace(replace_by_nan, np.nan)
-                df = df.append(sheet,ignore_index=True)
+                df = pd.concat([df, sheet])
         except ValueError:
             st.error("Le fichier " + f.name + " ne contient pas la page " + sheet_name)
 
@@ -44,11 +47,32 @@ if files is not None and len(files) > 0:
     # display france mapbox
     st.write("---")
     st.title("3. Afficher la carte de France")
-    french_departments_geojson="https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson"
-    fig = px.choropleth_mapbox(geojson=french_departments_geojson)
-    fig.update_geos(fitbounds="locations", visible=False)
-    fig.update_layout(mapbox_style="carto-positron", mapbox_zoom=3, mapbox_center = {"lat": 46.2276, "lon": 2.2137})
+    
+    with urllib.request.urlopen("https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements.geojson") as url:
+        french_departments_geojson = json.loads(url.read().decode())
+
+    # geojson to geopandas
+    gdf = gpd.GeoDataFrame.from_features(french_departments_geojson["features"])
+
+    # display the gdf polygons on a map
+    fig = px.choropleth_mapbox(
+        gdf, 
+        geojson=gdf.geometry, 
+        locations=gdf.index, 
+        #color="index",
+        #hover_name="nom",
+        #hover_data=["nom"],
+        mapbox_style="carto-positron",
+        zoom=4, 
+        center={"lat": 46.7111, "lon": 1.7191},
+        opacity=0.5,
+        labels={"index":"Département"}
+    )
+    fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
     st.plotly_chart(fig, use_container_width=True)
+    
+    
+
 
 
 
